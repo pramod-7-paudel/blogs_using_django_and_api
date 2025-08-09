@@ -1,47 +1,63 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=, initial-scale=1.0" />
-    <title>Document</title>
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-      integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr"
-      crossorigin="anonymous"
-    />
-  </head>
-  <body class="bg-light">
-    <div class ="container mt-5">
-      <h1>Blog Posts</h1>
-      <div id="posts class="row">
-        <!-- Posts will be dynamically inserted here -->
-
-      </div>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Blog Posts</title>
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+    crossorigin="anonymous"
+  />
+</head>
+<body class="bg-light">
+  <div class="container mt-5">
+    <h1>Blog Posts</h1>
+    <div id="posts" class="row">
+      <!-- Posts inserted here -->
     </div>
-    <script>
-      fetch("/api/posts/")
-        .then((response) => response.json())
-        .then((data) => {
-          const container = document.querySelector("div");
-          data.forEach((post) => {
-            const postDiv = document.createElement("div");
-            postDiv.classList.add("post");
-            postDiv.innerHTML += `
-                        <div class="col-md-6">
-                            <div class="card mb-3 shadow-sm">
-                                <div class="card-body">
-                                    <h5 class="card-title">${post.title}</h5>
-                                    <p class="card-text">${post.content}</p>
-                                    <small class="text-muted">Published on ${post.published}</small>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-            container.appendChild(postDiv);
-          });
-        })
-        .catch((error) => console.error("Error fetching posts:", error));
-    </script>
-  </body>
+  </div>
+
+  <script>
+    fetch("/api/posts/")
+      .then((res) => {
+        if (!res.ok) throw new Error("Network error");
+        return res.json();
+      })
+      .then((posts) => {
+        const container = document.getElementById("posts");
+        container.innerHTML = "";
+        posts.forEach(post => {
+          let publishedDate = "Unknown date";
+          if (post.published) {
+            const d = new Date(post.published);
+            if (!isNaN(d)) {
+              publishedDate = d.toLocaleString();
+            }
+          }
+
+          const div = document.createElement("div");
+          div.classList.add("col-md-6");
+          div.innerHTML = `
+            <div class="card mb-3 shadow-sm">
+              <div class="card-body">
+                <h5 class="card-title">${post.title}</h5>
+                <p class="card-text">${post.content}</p>
+                <p class="card-text"><strong>Author:</strong> ${post.author}</p>
+                <p class="card-text"><small class="text-muted">Published on ${publishedDate}</small></p>
+              </div>
+            </div>
+          `;
+          container.appendChild(div);
+        });
+      })
+      .catch((error) => {
+        console.error("Fetch error:", error);
+        document.getElementById("posts").innerHTML = `
+          <div class="col-12">
+            <div class="alert alert-danger">Failed to load posts.</div>
+          </div>`;
+      });
+  </script>
+</body>
 </html>
